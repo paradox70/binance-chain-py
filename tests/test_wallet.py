@@ -2,7 +2,6 @@ import pytest
 
 from binance_chain.wallet import Wallet
 from binance_chain.environment import BinanceEnvironment
-from binance_chain.http import HttpApiClient
 
 
 class TestWallet:

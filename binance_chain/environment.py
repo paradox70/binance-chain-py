@@ -2,12 +2,12 @@
 
 class BinanceEnvironment:
     PROD_ENV = {
-        'api_url': 'https://dex.binance.org',
+        'api_url': 'https://dex-atlantic.binance.org',
         'wss_url': 'wss://dex.binance.org/api/',
         'hrp': 'bnb'
     }
     TESTNET_ENV = {
-        'api_url': 'https://testnet-dex.binance.org',
+        'api_url': 'https://testnet-dex-atlantic.binance.org',
         'wss_url': 'wss://testnet-dex.binance.org/api/',
         'hrp': 'tbnb'
     }

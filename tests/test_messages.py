@@ -112,9 +112,6 @@ class TestMessages:
                     b'2002280130b0b502388094ebdc03400112700a26eb5ae9872102cce2ee4e37dc8c65d6445c966faf31ebfe578a9'
                     b'0695138947ee7cab8ae9a2c081240ad219de59c60637d642a684a9d56e4a2d189a2bb2a9028d0f4664206540bee'
                     b'763a62c3ce0ea0069f6e81f0733791c9b2a0e883c66aa6cc732f8ce92829e0b278189cb7012002')
-
-        print(msg.to_hex_data())
-
         assert msg.to_hex_data() == expected
 
     def test_cancel_order_message_dict(self, wallet):

@@ -2,11 +2,13 @@ import binascii
 from enum import Enum
 from typing import Optional
 
-from secp256k1 import PrivateKey
+from coincurve import PrivateKey
+from coincurve.ecdsa import der_to_cdata, serialize_compact
 from mnemonic import Mnemonic
-from pywallet.utils.bip32 import Wallet as Bip32Wallet
+from multimerchant.wallet import Wallet as Bip32Wallet
 
-from binance_chain.utils.segwit_addr import address_from_public_key, decode_address
+from binance_chain.utils.segwit_addr import address_from_public_key, \
+    decode_address
 from binance_chain.environment import BinanceEnvironment
 
 
@@ -54,11 +56,13 @@ class BaseWallet:
             self._sequence -= 1
 
     def reload_account_sequence(self):
-        sequence_res = self._get_http_client().get_account_sequence(self._address)
+        sequence_res = self._get_http_client().get_account_sequence(
+            self._address)
         self._sequence = sequence_res['sequence']
 
     def generate_order_id(self):
-        return f"{binascii.hexlify(self.address_decoded).decode().upper()}-{(self._sequence + 1)}"
+        return f"{binascii.hexlify(self.address_decoded).decode().upper()}-" \
+               f"{(self._sequence + 1)}"
 
     def _get_http_client(self):
         if not self._http_client:
@@ -109,27 +113,24 @@ class Wallet(BaseWallet):
     def __init__(self, private_key, env: Optional[BinanceEnvironment] = None):
         super().__init__(env)
         self._private_key = private_key
-        self._pk = PrivateKey(bytes(bytearray.fromhex(self._private_key)))
-        self._public_key = self._pk.pubkey.serialize(compressed=True)
-        self._address = address_from_public_key(self._public_key, self._env.hrp)
+        self._pk = PrivateKey(bytes.fromhex(self._private_key))
+        self._public_key = self._pk.public_key.format(compressed=True)
+        self._address = address_from_public_key(
+            self._public_key, self._env.hrp)
 
     @classmethod
-    def create_random_wallet(cls, language: MnemonicLanguage = MnemonicLanguage.ENGLISH,
-                             env: Optional[BinanceEnvironment] = None):
-        """Create wallet with random mnemonic code
-
-        :return:
-        """
+    def create_random_wallet(
+            cls, language: MnemonicLanguage = MnemonicLanguage.ENGLISH,
+            env: Optional[BinanceEnvironment] = None):
+        """ Create wallet with random mnemonic code """
         m = Mnemonic(language.value)
         phrase = m.generate()
         return cls.create_wallet_from_mnemonic(phrase, env=env)
 
     @classmethod
-    def create_wallet_from_mnemonic(cls, mnemonic: str, env: Optional[BinanceEnvironment] = None):
-        """Create wallet with random mnemonic code
-
-        :return:
-        """
+    def create_wallet_from_mnemonic(
+            cls, mnemonic: str, env: Optional[BinanceEnvironment] = None):
+        """ Create wallet with random mnemonic code """
         seed = Mnemonic.to_seed(mnemonic)
         new_wallet = Bip32Wallet.from_master_secret(seed=seed, network='BTC')
         child = new_wallet.get_child_for_path(Wallet.HD_PATH)
@@ -141,5 +142,5 @@ class Wallet(BaseWallet):
 
     def sign_message(self, msg_bytes):
         # check if ledger wallet
-        sig = self._pk.ecdsa_sign(msg_bytes)
-        return self._pk.ecdsa_serialize_compact(sig)
+        sig = self._pk.sign(msg_bytes)
+        return serialize_compact(raw_sig=der_to_cdata(der=sig))
